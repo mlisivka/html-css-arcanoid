@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <script src="jquery-2.1.1.js"></script>
+
+
+    <style>
+        #platform {
+            width: 150px;
+            height: 15px;
+            position: absolute;
+            left: 49%;
+            top: 90%;
+            border: 1px solid #6BFF66;
+            background-color: #e7ff66;
+            border-radius: 13%;
+            opacity: 0.7;
+            //-webkit-box-background: radial-gradient(rgba(231,255,102,0.7), rgba(255,255,102,0.8));
+            //-moz-box-background: radial-gradient(rgba(231,255,102,0.7), rgba(255,255,102,0.8));
+            //background: radial-gradient(rgba(231,255,102,0.7), rgba(255,255,102,0.8));// 107,255,102 / 255,255,102
+        }
+        #ball {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            left: 49%;
+            top: 85%;
+            background-color: red;
+            -webkit-box-background: radial-gradient(circle at 10px 10px, #39C29D, #000);
+            -moz-box-background: radial-gradient(circle at 10px 10px, #39C29D, #000);
+            background: radial-gradient(circle at 10px 10px, #39C29D, #000);
+            -webkit-box-shadow: 1px 1px 5px 0px;
+            -moz-box-shadow: 1px 1px 5px 0px;
+            box-shadow: 1px 1px 5px 0px;
+        }
+        #field {
+            left: 50%;
+            position: absolute;
+            width: 1270px;
+            height: 910px;
+            border: 1px solid black;
+            background-color: #07F9FF;
+            margin-left: -640px;
+            //background-image: url(fon.jpg);
+        }
+
+        .block {
+            width: 40px;
+            height: 20px;
+            position: relative;
+            top: 20px;
+            left: 20px;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            border: 1px solid black;
+            background-color: #532dbd;
+            float: left;
+            border-radius: 10%;
+            -webkit-box-shadow: 2px 2px 16px 0px rgba(50, 50, 50, 0.7);
+            -moz-box-shadow: 2px 2px 16px 0px rgba(50, 50, 50, 0.7);
+            box-shadow: 2px 2px 16px 0px rgba(50, 50, 50, 0.7);
+            -webkit-box-background: radial-gradient(#A996DE, #532dbd);
+            -moz-box-background: radial-gradient(#A996DE, #532dbd);
+            background: radial-gradient(#A996DE, #532dbd);
+        }
+
+        .spacer {
+            width: 40px;
+            height: 20px;
+            position: relative;
+            top: 20px;
+            left: 20px;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            /*border: 1px solid black;*/
+            float: left;
+            border-radius: 10%;
+        }
+
+        /* Additional styles for blocks and spacers*/
+        .w2x { width: 80px; }
+        .h2x { height: 40px; }
+        .a2x { width: 80px; height: 40px; }
+        .w4x { width: 160px; }
+        .h4x { height: 80px; }
+        .a4x { width: 160px; height: 80px; }
+        .red { background: radial-gradient(#A996DE, red); }
+        .green { background: radial-gradient(#A996DE, green); }
+        .yellow { background: radial-gradient(#A996DE, yellow); }
+        .blue { background: radial-gradient(#A996DE, blue); }
+        .with { }
+        .lowerSpeedBonus { }
+        .higherSpeedBonus { }
+        .platformWidthBonus { }
+        .armor { }
+        .doubleArmor { }
+
+
+        #TextInfo_lives {
+            position: absolute;
+            left: 40px;
+            top: 230px;
+            font-family: serif;
+            font-style: italic;
+            font-size: 25px;
+            color: #ffffff;
+            opacity: 0.7;
+            cursor: default;
+        }
+        #TextInfo_Points {
+            position: absolute;
+            left: 40px;
+            top: 270px;
+            font-family: serif;
+            font-style: italic;
+            font-size: 25px;
+            color: #ffffff;
+            opacity: 0.7;
+            cursor: default;
+        }
+        #display {
+            display: none;
+            position: absolute;
+            text-align: center;
+            font-family: serif;
+            font-style: italic;
+            font-size: 50px;
+            height: 90px;
+            width: 500px;
+            left: 50%;
+            top: 50%;
+            background-color: #FFFF00;
+            opacity: 0.7;
+            margin-left: -250px;
+            margin-top: -45px;
+            border: 2px solid black;
+            cursor: default;
+        }
+        #key {
+            left: -2px;
+            top: 58px;
+            height: 30px;
+            width: 250px;
+            position: absolute;
+            background-color: green;
+            border: 2px solid black;
+            text-align: center;
+            font-size: 25px;
+        }
+        #key:hover {
+            background-color: blue;
+            cursor: pointer;
+        }
+        #setting {
+            position: absolute;
+            text-align: center;
+            font-family: serif;
+            font-style: italic;
+            font-size: 35px;
+            height: 90px;
+            width: 500px;
+            left: 50%;
+            top: 50%;
+            background-color: #FFFF00;
+            opacity: 0.7;
+            margin-left: -250px;
+            margin-top: -45px;
+            cursor: default;
+        }
+        #select {
+            height: 45px;
+            width: 500px;
+            position: relative;
+            background-color: green;
+            border: 1px solid black;
+        }
+        #select:hover {
+            background-color: blue;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="field">
+        <div class="a2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x blue block"></div>
+        <div class="a2x blue block"></div>
+        <div class="w2x green block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="a4x block"></div>
+        <div class="a4x red block"></div>
+        <div class="a4x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="a2x yellow block">A</div>
+        <div class="block">B</div>
+        <div class="block">C</div>
+        <div class="a2x spacer">D</div>
+        <div class="block">E</div>
+        <div class="block">F</div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="a2x block"></div>
+        <div class="w2x block"></div>
+        <div class="block"></div>
+        <div class="h2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x yellow block with platformWidthBonus">Width</div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="width: 80px;"></div>
+
+        <div id="ball"></div>
+        <div id="platform"></div>
+        <div id="TextInfo_lives">Lives: 3</div>
+        <div id="TextInfo_Points">Points: 0</div>
+        <div id="display">
+            <div id="key" onclick='parent.location="javascript:location.reload()"'>Restart</div>
+            <div id="key" style="left:248px" onclick="">Next Level</div>
+        </div>
+    </div>
+
+
+</body>
+<script>
+'use strict';
+    window.requestAnimFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function( /* function */ callback, /* DOMElement */ element) {
+                window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+
+    (function initPlatform() {
+        var field = document.getElementById("field");
+        var platform = document.getElementById("platform");
+        var ball = document.getElementById("ball");
+        var info_lives = document.getElementById("TextInfo_lives");
+        var info_points = document.getElementById("TextInfo_Points");
+        var display = document.getElementById("display");
+        var key = document.getElementById("key");
+
+        var fieldX = field.offsetLeft;
+        var fieldWidth = field.clientWidth;
+        var fieldHeight = field.clientHeight;
+
+        var platformX = platform.offsetLeft;
+        var platformY= platform.offsetTop;
+        var platformWidth = platform.clientWidth;
+        var plarformHeight = platform.clientHeight;
+        var platformWidth = platform.clientWidth;
+        var platformHeight = platform.clientHeight;
+
+        var ballX = ball.offsetLeft;
+        var ballY = ball.offsetTop;
+        var ballWidth = ball.clientWidth;
+        var ballHeight = ball.clientHeight;
+        var ballRadius = ballWidth/2;
+        var velocityX = 0;
+        var velocityY = 0;
+
+        // Blocks model
+        var blocks = makeArrayFromElements($('div.block'));
+        var blocksCount = blocks.length;
+        var blocksMatrix = makeMatrixFromBlocks(blocks);
+
+        var launched = false;
+        var prevTime = new Date().getTime();
+        var points = 0;
+        var lives = 3;
+        var left = 0;
+        var frameCount = 0;
+
+        // Cache information about each block into array
+        function makeArrayFromElements(elements) {
+            var hit = function block_hit() {
+              this.element.css('visibility', 'hidden');
+              this.visible = false;
+              blocksCount--;
+            }
+
+            var isVisible = function block_isVisible() {
+              return this.visible;
+            }
+
+            var array=[];
+            for(var i=0; i<elements.length; i++) {
+                var elem=$(elements[i]);
+                array.push({
+                    position:elem.position(),
+                    x:elem.position().left,
+                    y:elem.position().top,
+                    width:elem.width(),
+                    height:elem.height(),
+                    element:elem,
+                    visible:true,
+                    hit:hit,
+                    isVisible:isVisible,
+                });
+            }
+            return array;
+        }
+
+        // Divide field space into matrix and store link to block into each corresponding cell
+        // for faster access.
+        function makeMatrixFromBlocks(blocks) {
+          var matrix={};
+
+          matrix.getBlocksAtPoint = function matrix_getBlocksAtPoint(x,y) {
+              var cellX = (x/ballWidth) | 0;
+              var cellY = (y/ballHeight) | 0;
+              return matrix[cellX+','+cellY] || [];
+          };
+
+          matrix.storeBlockInMatrix = function matrix_storeBlockInMatrix(block, x, y) {
+              var cellX = (x/ballWidth) | 0;
+              var cellY = (y/ballHeight) | 0;
+              var array = matrix[cellX+','+cellY] || [];
+
+              if(array.indexOf(block)<0) {
+                array.push(block);
+                matrix[cellX+','+cellY] = array;
+              }
+          };
+
+          // Find first block which crosses given rectangle
+          matrix.blockAtSpot = function matrix_blockAtSpot(x, y) {
+            var cellX = (x/ballWidth) | 0;
+            var cellY = (y/ballHeight) | 0;
+            var blocks = [].concat(
+              this[cellX+','+cellY],
+              this[(cellX+1)+','+cellY],
+              this[cellX+','+(cellY+1)],
+              this[(cellX+1)+','+(cellY+1)]
+            );
+
+            for(var index=0; index < blocks.length; index++) {
+                var block=blocks[index];
+                if(block && block.isVisible()) {
+
+                    if(x+ballWidth < block.x)
+                      continue;
+                    if(x > block.x+block.width)
+                      continue;
+                    if(y+ballHeight < block.y)
+                      continue;
+                    if(y > block.y+block.height)
+                      continue;
+
+                    return block;
+                }
+            }
+            return null;
+          }
+
+          for(var i=0; i<blocks.length; i++) {
+              var block=blocks[i];
+              matrix.storeBlockInMatrix(block, block.x, block.y);
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y);
+              matrix.storeBlockInMatrix(block, block.x, block.y+block.height);
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y+block.height);
+          }
+
+          return matrix;
+        }
+
+        // Move platform when mouse moves
+        field.onmousemove = function(cursor) { // mouse
+                platformX = cursor.clientX - fieldX - platformWidth/2;
+
+                // Stop platform at field borders
+                if(platformX < 0) {
+                  platformX = 0;
+                }
+                if(platformX + platformWidth > fieldWidth) {
+                  platformX = fieldWidth - platformWidth;
+                }
+        };
+
+        // Launch ball on mouse click
+        field.onclick = function(e) {
+            if (!launched) {
+                launched = true;
+                frameCount=0;
+            }
+        };
+
+        // Return square of distance from ball center to inersection with horizontal plane.
+        function distance(velocityY, velocityX, ballX, ballY, planeY) {
+          // y := a*x + b
+          // a := dy/dx
+          // b := y1 - a*x1
+          // x := (y - b)/a
+
+          var a = velocityY/velocityX;
+          var x1 = ballX-velocityX+ballRadius;
+          var y1 = ballY-velocityY+ballRadius;
+          var b = y1 - a*x1;
+          var planeX = (planeY - b)/a;
+          var dx = planeX - x1;
+          var dy = planeY - y1;
+          return dx*dx + dy*dy;
+        }
+
+        function updateModel() {
+            var time = new Date().getTime();
+            var delta = time - prevTime;
+            prevTime = time;
+
+            if(!launched) {
+                // Set velocity to randomize launch angle
+                velocityX = Math.sin(frameCount/30)*3;
+                velocityY = -Math.abs(Math.cos(frameCount/30)*3)+1;
+                //velocityX = 3*(((platformX+platformWidth)-fieldWidth/2)/fieldWidth);
+
+                // Move ball with platform when it is not launched
+                ballX = platformX + platformWidth/2 - ballWidth/2 + (velocityX/3)*((platformWidth-ballWidth)/2);
+                ballY = platformY - ballHeight;
+            }
+
+            if (launched) {
+                // Increase velocity a bit over time
+                velocityX*=(1+delta/300000);
+                velocityY*=(1+delta/300000);
+
+                // Move ball
+                ballX += (velocityX * delta) / 5;
+                ballY += (velocityY * delta) / 5;
+
+                // Check is ball hit left wall
+                if (ballX < 0)
+                    velocityX = Math.abs(velocityX);
+                // Check is ball hit top wall
+                if (ballY < 0)
+                    velocityY = Math.abs(velocityY);
+
+                // Check is ball hit right wall
+                if (ballX + ballWidth > fieldWidth) {
+                    velocityX = -Math.abs(velocityX);
+                }
+
+                // Check is ball hit bottom
+                if (ballY + ballHeight > fieldHeight) {
+                    launched = false;
+                    lives--;
+                    info_lives.innerHTML = "lives: " + lives;
+                }
+
+                // Check is ball hit platform
+                if (ballY + ballHeight > platformY
+                    && ballY < platformY + platformHeight
+                    && ballX + ballWidth > platformX
+                    && ballX < platformX + platformWidth) {
+                    velocityY = -Math.abs(velocityY);
+                    // Change velocity by X relative to point of platform which is hit
+                    velocityX += 3*Math.sin((((ballX + ballWidth/2) - (platformX + platformWidth/2))/platformWidth)*1.552);
+                }
+
+                // Check is ball hit a block
+                var block = blocksMatrix.blockAtSpot(ballX, ballY);
+                if(block) {
+                    block.hit();
+
+                    // Calculate distance to intesection of ball side with nearest
+                    // vertical plane from center of previous ball position
+                    var distanceX = 0;
+                    if(velocityX<0) {
+                      // From right to left, use right side of the block, rotate coordinate system by 90
+                      distanceX = distance(velocityX, velocityY, ballY, ballX, block.x+block.width+ballRadius);
+                    } else {
+                      // From left to right, use left side of the block, rotate coordinate system by 90
+                      distanceX = distance(velocityX, velocityY, ballY, ballX, block.x+ballRadius);
+                    }
+
+                    // Calculate distance to intesection of ball side with nearest
+                    // horizontal plane from center of previous ball position
+                    var distanceY = 0;
+                    if(velocityY<0) {
+                      // From bottom to up, use bottom side of the block
+                      distanceY = distance(velocityY, velocityX, ballX, ballY, block.y+block.height+ballRadius);
+                    } else {
+                      // From up to bottom, use top side of the block
+                      distanceY = distance(velocityY, velocityX, ballX, ballY, block.y-ballRadius);
+                    }
+
+                    if(distanceX<distanceY) {
+                      // Ball touched vertical side first
+                      velocityX = -velocityX;
+                    } else {
+                      // Ball touched horizontal side first
+                      velocityY = -velocityY;
+                    }
+
+                    points++;
+                    info_points.innerHTML = "Points: " + points;
+                }
+            }
+
+            if (lives === 0) {
+                launched = false;
+                $(display).css('display', 'block');
+                display.innerHTML += "You LOST";
+                // Stop loop
+                throw 'You LOST';
+            }
+            if (blocksCount <= 0) {
+                launched = false;
+                $(display).css('display', 'block');
+                display.innerHTML += "You WIN";
+                // Stop loop
+                throw 'You WIN';
+            }
+        }
+
+        function render() {
+          platform.style.left = (platformX | 0) + "px";
+          ball.style.left = (ballX | 0) + "px";
+          ball.style.top = (ballY | 0)+ "px";
+        }
+
+        (function animloop() {
+            frameCount++;
+            updateModel();
+            render();
+            requestAnimFrame(animloop, field);
+        })();
+
+    })();
+</script>
+
+</html>
