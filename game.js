@@ -104,24 +104,30 @@
         function makeMatrixFromBlocks(blocks) {
           var matrix={};
 
+          // Get list of available blocks at given coordinates
           matrix.getBlocksAtPoint = function matrix_getBlocksAtPoint(x,y) {
               var cellX = (x/ballWidth) | 0;
               var cellY = (y/ballHeight) | 0;
               return matrix[cellX+','+cellY] || [];
           };
 
+          // Store link to block at given coordinates
           matrix.storeBlockInMatrix = function matrix_storeBlockInMatrix(block, x, y) {
               var cellX = (x/ballWidth) | 0;
               var cellY = (y/ballHeight) | 0;
-              var array = matrix[cellX+','+cellY] || [];
+              var array = matrix[cellX+','+cellY];
+              // If cell is empty, initialze it
+              if(!array) {
+                matrix[cellX+','+cellY] = array = [];
+              }
 
-              if(array.indexOf(block)<0) {
+              // If block is not already added, then add it to the list
+              if(array.indexOf(block)===-1) {
                 array.push(block);
-                matrix[cellX+','+cellY] = array;
               }
           };
 
-          // Find first block which crosses given rectangle
+          // Find first block which crosses given rectangle or null
           matrix.blockAtSpot = function matrix_blockAtSpot(x, y) {
             var cellX = (x/ballWidth) | 0;
             var cellY = (y/ballHeight) | 0;
@@ -151,12 +157,31 @@
             return null;
           }
 
+          // Store links to blocks in matrix
           for(var i=0; i<blocks.length; i++) {
               var block=blocks[i];
-              matrix.storeBlockInMatrix(block, block.x, block.y);
-              matrix.storeBlockInMatrix(block, block.x+block.width, block.y);
-              matrix.storeBlockInMatrix(block, block.x, block.y+block.height);
-              matrix.storeBlockInMatrix(block, block.x+block.width, block.y+block.height);
+              // Store block at corners position
+              matrix.storeBlockInMatrix(block, block.x, block.y); // Top left corner
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y); // Top right corner
+              matrix.storeBlockInMatrix(block, block.x, block.y+block.height); // Bottom left corner
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y+block.height); // Bottom right corner
+
+              if(block.width>ballWidth*2) {
+                // Block is too wide, so ball can slip trough
+                // Store additional coordinates
+                for(var ix=block.x+ballWidth; ix<block.x+block.width-ballWidth; ix+=ballWidth) {
+                  matrix.storeBlockInMatrix(block, ix, block.y); // Top side
+                  matrix.storeBlockInMatrix(block, ix, block.y+block.height); // Bottom side
+                }
+              }
+              if(block.height>ballHeight*2) {
+                // Block is too high, so ball can slip trough
+                // Store additional coordinates
+                for(var iy=block.y+ballHeight; iy<block.y+block.height-ballHeight; iy+=ballHeight) {
+                  matrix.storeBlockInMatrix(block, block.x, iy); // Left side
+                  matrix.storeBlockInMatrix(block, block.x+block.width, iy); // Right side
+                }
+              }
           }
 
           return matrix;
@@ -390,4 +415,4 @@
         window.restart = function () { loop=false; window.setTimeout(restart, 300); };
         window.nextLevel = function () { loop=false; window.setTimeout(nextLevel, 300); };
 
-    })(1, 0, 3); // Start game from level 1, with 0 points and 3 lives, see also restart()
+    })(0, 0, 3); // Start game from level 1, with 0 points and 3 lives, see also restart()
