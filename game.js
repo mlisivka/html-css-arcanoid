@@ -185,6 +185,9 @@
             var time = new Date().getTime();
             var delta = time - prevTime;
             prevTime = time;
+            if(delta > 1000/60) {
+              delta = 1000/60;
+            }
 
             if(!launched) {
                 // Set velocity to randomize launch angle
