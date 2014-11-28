@@ -1,0 +1,306 @@
+'use strict';
+    window.requestAnimFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function( /* function */ callback, /* DOMElement */ element) {
+                window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+
+    (function initPlatform() {
+        var field = document.getElementById("field");
+        var platform = document.getElementById("platform");
+        var ball = document.getElementById("ball");
+        var info_lives = document.getElementById("TextInfo_lives");
+        var info_points = document.getElementById("TextInfo_Points");
+        var display = document.getElementById("display");
+        var key = document.getElementById("key");
+
+        var fieldX = field.offsetLeft;
+        var fieldWidth = field.clientWidth;
+        var fieldHeight = field.clientHeight;
+
+        var platformX = platform.offsetLeft;
+        var platformY= platform.offsetTop;
+        var platformWidth = platform.clientWidth;
+        var plarformHeight = platform.clientHeight;
+        var platformWidth = platform.clientWidth;
+        var platformHeight = platform.clientHeight;
+
+        var ballX = ball.offsetLeft;
+        var ballY = ball.offsetTop;
+        var ballWidth = ball.clientWidth;
+        var ballHeight = ball.clientHeight;
+        var ballRadius = ballWidth/2;
+        var velocityX = 0;
+        var velocityY = 0;
+
+        // Blocks model
+        var blocks = makeArrayFromElements($('div.block'));
+        var blocksCount = blocks.length;
+        var blocksMatrix = makeMatrixFromBlocks(blocks);
+
+        var launched = false;
+        var prevTime = new Date().getTime();
+        var points = 0;
+        var lives = 3;
+        var left = 0;
+        var frameCount = 0;
+
+        // Cache information about each block into array
+        function makeArrayFromElements(elements) {
+            var hit = function block_hit() {
+              this.element.css('visibility', 'hidden');
+              this.visible = false;
+              blocksCount--;
+            }
+
+            var isVisible = function block_isVisible() {
+              return this.visible;
+            }
+
+            var array=[];
+            for(var i=0; i<elements.length; i++) {
+                var elem=$(elements[i]);
+                array.push({
+                    position:elem.position(),
+                    x:elem.position().left,
+                    y:elem.position().top,
+                    width:elem.width(),
+                    height:elem.height(),
+                    element:elem,
+                    visible:true,
+                    hit:hit,
+                    isVisible:isVisible,
+                });
+            }
+            return array;
+        }
+
+        // Divide field space into matrix and store link to block into each corresponding cell
+        // for faster access.
+        function makeMatrixFromBlocks(blocks) {
+          var matrix={};
+
+          matrix.getBlocksAtPoint = function matrix_getBlocksAtPoint(x,y) {
+              var cellX = (x/ballWidth) | 0;
+              var cellY = (y/ballHeight) | 0;
+              return matrix[cellX+','+cellY] || [];
+          };
+
+          matrix.storeBlockInMatrix = function matrix_storeBlockInMatrix(block, x, y) {
+              var cellX = (x/ballWidth) | 0;
+              var cellY = (y/ballHeight) | 0;
+              var array = matrix[cellX+','+cellY] || [];
+
+              if(array.indexOf(block)<0) {
+                array.push(block);
+                matrix[cellX+','+cellY] = array;
+              }
+          };
+
+          // Find first block which crosses given rectangle
+          matrix.blockAtSpot = function matrix_blockAtSpot(x, y) {
+            var cellX = (x/ballWidth) | 0;
+            var cellY = (y/ballHeight) | 0;
+            var blocks = [].concat(
+              this[cellX+','+cellY],
+              this[(cellX+1)+','+cellY],
+              this[cellX+','+(cellY+1)],
+              this[(cellX+1)+','+(cellY+1)]
+            );
+
+            for(var index=0; index < blocks.length; index++) {
+                var block=blocks[index];
+                if(block && block.isVisible()) {
+
+                    if(x+ballWidth < block.x)
+                      continue;
+                    if(x > block.x+block.width)
+                      continue;
+                    if(y+ballHeight < block.y)
+                      continue;
+                    if(y > block.y+block.height)
+                      continue;
+
+                    return block;
+                }
+            }
+            return null;
+          }
+
+          for(var i=0; i<blocks.length; i++) {
+              var block=blocks[i];
+              matrix.storeBlockInMatrix(block, block.x, block.y);
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y);
+              matrix.storeBlockInMatrix(block, block.x, block.y+block.height);
+              matrix.storeBlockInMatrix(block, block.x+block.width, block.y+block.height);
+          }
+
+          return matrix;
+        }
+
+        // Move platform when mouse moves
+        field.onmousemove = function(cursor) { // mouse
+                platformX = cursor.clientX - fieldX - platformWidth/2;
+
+                // Stop platform at field borders
+                if(platformX < 0) {
+                  platformX = 0;
+                }
+                if(platformX + platformWidth > fieldWidth) {
+                  platformX = fieldWidth - platformWidth;
+                }
+        };
+
+        // Launch ball on mouse click
+        field.onclick = function(e) {
+            if (!launched) {
+                launched = true;
+                frameCount=0;
+            }
+        };
+
+        // Return square of distance from ball center to inersection with horizontal plane.
+        function distance(velocityY, velocityX, ballX, ballY, planeY) {
+          // y := a*x + b
+          // a := dy/dx
+          // b := y1 - a*x1
+          // x := (y - b)/a
+
+          var a = velocityY/velocityX;
+          var x1 = ballX-velocityX+ballRadius;
+          var y1 = ballY-velocityY+ballRadius;
+          var b = y1 - a*x1;
+          var planeX = (planeY - b)/a;
+          var dx = planeX - x1;
+          var dy = planeY - y1;
+          return dx*dx + dy*dy;
+        }
+
+        function updateModel() {
+            var time = new Date().getTime();
+            var delta = time - prevTime;
+            prevTime = time;
+
+            if(!launched) {
+                // Set velocity to randomize launch angle
+                velocityX = Math.sin(frameCount/30)*3;
+                velocityY = -3;
+
+                // Move ball with platform when it is not launched
+                ballX = platformX + platformWidth/2 - ballWidth/2 + (velocityX/3)*((platformWidth-ballWidth)/2);
+                ballY = platformY - ballHeight;
+            }
+
+            if (launched) {
+                // Increase velocity a bit over time
+                velocityX*=(1+delta/300000);
+                velocityY*=(1+delta/300000);
+
+                // Move ball
+                ballX += (velocityX * delta) / 5;
+                ballY += (velocityY * delta) / 5;
+
+                // Check is ball hit left wall
+                if (ballX < 0)
+                    velocityX = Math.abs(velocityX);
+                // Check is ball hit top wall
+                if (ballY < 0)
+                    velocityY = Math.abs(velocityY);
+
+                // Check is ball hit right wall
+                if (ballX + ballWidth > fieldWidth) {
+                    velocityX = -Math.abs(velocityX);
+                }
+
+                // Check is ball hit bottom
+                if (ballY + ballHeight > fieldHeight) {
+                    launched = false;
+                    lives--;
+                    info_lives.innerHTML = "lives: " + lives;
+                }
+
+                // Check is ball hit platform
+                if (ballY + ballHeight > platformY
+                    && ballY < platformY + platformHeight
+                    && ballX + ballWidth > platformX
+                    && ballX < platformX + platformWidth) {
+                    velocityY = -Math.abs(velocityY);
+                    // Change velocity by X relative to point of platform which is hit
+                    velocityX += 3*Math.sin((((ballX + ballWidth/2) - (platformX + platformWidth/2))/platformWidth)*1.552);
+                }
+
+                // Check is ball hit a block
+                var block = blocksMatrix.blockAtSpot(ballX, ballY);
+                if(block) {
+                    block.hit();
+
+                    // Calculate distance to intesection of ball side with nearest
+                    // vertical plane from center of previous ball position
+                    var distanceX = 0;
+                    if(velocityX<0) {
+                      // From right to left, use right side of the block, rotate coordinate system by 90
+                      distanceX = distance(velocityX, velocityY, ballY, ballX, block.x+block.width+ballRadius);
+                    } else {
+                      // From left to right, use left side of the block, rotate coordinate system by 90
+                      distanceX = distance(velocityX, velocityY, ballY, ballX, block.x+ballRadius);
+                    }
+
+                    // Calculate distance to intesection of ball side with nearest
+                    // horizontal plane from center of previous ball position
+                    var distanceY = 0;
+                    if(velocityY<0) {
+                      // From bottom to up, use bottom side of the block
+                      distanceY = distance(velocityY, velocityX, ballX, ballY, block.y+block.height+ballRadius);
+                    } else {
+                      // From up to bottom, use top side of the block
+                      distanceY = distance(velocityY, velocityX, ballX, ballY, block.y-ballRadius);
+                    }
+
+                    if(distanceX<distanceY) {
+                      // Ball touched vertical side first
+                      velocityX = -velocityX;
+                    } else {
+                      // Ball touched horizontal side first
+                      velocityY = -velocityY;
+                    }
+
+                    points++;
+                    info_points.innerHTML = "Points: " + points;
+                }
+            }
+
+            if (lives === 0) {
+                launched = false;
+                $(display).css('display', 'block');
+                display.innerHTML += "You LOST";
+                // Stop loop
+                throw 'You LOST';
+            }
+            if (blocksCount <= 0) {
+                launched = false;
+                $(display).css('display', 'block');
+                display.innerHTML += "You WIN";
+                // Stop loop
+                throw 'You WIN';
+            }
+        }
+
+        function render() {
+          platform.style.left = (platformX | 0) + "px";
+          ball.style.left = (ballX | 0) + "px";
+          ball.style.top = (ballY | 0)+ "px";
+        }
+
+        (function animloop() {
+            frameCount++;
+            updateModel();
+            render();
+            requestAnimFrame(animloop, field);
+        })();
+
+    })();
