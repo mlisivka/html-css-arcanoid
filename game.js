@@ -1,23 +1,24 @@
 'use strict';
-    window.requestAnimFrame = (function() {
-        return window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            window.oRequestAnimationFrame ||
-            window.msRequestAnimationFrame ||
-            function( /* function */ callback, /* DOMElement */ element) {
-                window.setTimeout(callback, 1000 / 60);
-            };
-    })();
+    (function initGame(level, points, lives) {
+        // Hide all levels
+        $('.level').hide();
+        var levelDiv = document.getElementById("level"+level);
+        if(!levelDiv) {
+          level = 1;
+          levelDiv = document.getElementById("level"+level);
+        }
+        // Show current level
+        $(levelDiv).show();
 
-    (function initPlatform() {
-        var field = document.getElementById("field");
-        var platform = document.getElementById("platform");
-        var ball = document.getElementById("ball");
-        var info_lives = document.getElementById("TextInfo_lives");
-        var info_points = document.getElementById("TextInfo_Points");
-        var display = document.getElementById("display");
-        var key = document.getElementById("key");
+        var field = document.getElementById("fieldDiv");
+        var platform = document.getElementById("platformDiv");
+        var ball = document.getElementById("ballDiv");
+        var livesDiv = document.getElementById("livesDiv");
+        var pointsDiv = document.getElementById("pointsDiv");
+        var dialogDiv = document.getElementById("dialogDiv");
+        var displayDiv = document.getElementById("displayDiv");
+        var frameRateDiv = document.getElementById("frameRateDiv");
+        var levelInfoDiv = document.getElementById("levelInfoDiv");
 
         var fieldX = field.offsetLeft;
         var fieldWidth = field.clientWidth;
@@ -39,16 +40,30 @@
         var velocityY = 0;
 
         // Blocks model
-        var blocks = makeArrayFromElements($('div.block'));
+        var blocks = makeArrayFromElements($('#level'+level+' > div.block'));
         var blocksCount = blocks.length;
         var blocksMatrix = makeMatrixFromBlocks(blocks);
 
+        // Set to true to launch
         var launched = false;
-        var prevTime = new Date().getTime();
-        var points = 0;
-        var lives = 3;
-        var left = 0;
+        // For ball animation at platform before launch
         var frameCount = 0;
+        // For frame throtling
+        var prevTime = new Date().getTime();
+        var loop = false;
+        var frameRate = 60;
+
+        // Polyfill for requestAnimationFrame() function
+        var requestAnimFrame = (function() {
+          return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function( /* function */ callback, /* DOMElement */ element) {
+                window.setTimeout(callback, 1000 / frameRate);
+            };
+        })();
 
         // Cache information about each block into array
         function makeArrayFromElements(elements) {
@@ -56,6 +71,9 @@
               this.element.css('visibility', 'hidden');
               this.visible = false;
               blocksCount--;
+            }
+            var show = function block_show() {
+              this.element.css('visibility', 'visible');
             }
 
             var isVisible = function block_isVisible() {
@@ -75,6 +93,7 @@
                     visible:true,
                     hit:hit,
                     isVisible:isVisible,
+                    show:show
                 });
             }
             return array;
@@ -160,7 +179,6 @@
         field.onclick = function(e) {
             if (!launched) {
                 launched = true;
-                frameCount=0;
             }
         };
 
@@ -185,13 +203,13 @@
             var time = new Date().getTime();
             var delta = time - prevTime;
             prevTime = time;
-            if(delta > 1000/60) {
-              delta = 1000/60;
+            if(delta > 1000/frameRate) {
+              delta = 1000/frameRate;
             }
 
             if(!launched) {
                 // Set velocity to randomize launch angle
-                velocityX = Math.sin(frameCount/30)*3;
+                velocityX = Math.sin(++frameCount/frameRate)*3;
                 velocityY = -3;
 
                 // Move ball with platform when it is not launched
@@ -224,7 +242,7 @@
                 if (ballY + ballHeight > fieldHeight) {
                     launched = false;
                     lives--;
-                    info_lives.innerHTML = "lives: " + lives;
+                    livesDiv.innerHTML = "Lives: " + lives;
                 }
 
                 // Check is ball hit platform
@@ -273,24 +291,46 @@
                     }
 
                     points++;
-                    info_points.innerHTML = "Points: " + points;
+                    pointsDiv.innerHTML = "Points: " + points;
                 }
             }
 
             if (lives === 0) {
-                launched = false;
-                $(display).css('display', 'block');
-                display.innerHTML += "You LOST";
-                // Stop loop
-                throw 'You LOST';
+                endGame("You LOST", false);
             }
             if (blocksCount <= 0) {
-                launched = false;
-                $(display).css('display', 'block');
-                display.innerHTML += "You WIN";
-                // Stop loop
-                throw 'You WIN';
+                endGame("You WIN", true);
             }
+        }
+
+        function endGame(title,win) {
+            // Stop loop
+            loop = false;
+
+            // Display dialog
+            $(dialogDiv).show();
+            displayDiv.innerHTML = title;
+            if(win) {
+              $(restartDiv).hide();
+              $(nextLevelDiv).show();
+            } else {
+              $(restartDiv).show();
+              $(nextLevelDiv).hide();
+            }
+        }
+
+        var fps_prevTime = 0;
+        var fps_frameCount = 0;
+        function displayFrameRate() {
+          if(frameRateDiv) {
+            var currentTime = new Date().getTime();
+            var delta = (currentTime - fps_prevTime) | 0;
+            var fps = (fps_frameCount * 1000/ delta) | 0;
+            fps_prevTime = currentTime;
+            fps_frameCount = 0;
+
+            frameRateDiv.innerHTML = 'FPS: '+fps;
+          }
         }
 
         function render() {
@@ -299,11 +339,55 @@
           ball.style.top = (ballY | 0)+ "px";
         }
 
-        (function animloop() {
-            frameCount++;
+        function game_loop() {
+            if(((++fps_frameCount)%100) == 0) {
+              displayFrameRate();
+            }
+
             updateModel();
             render();
-            requestAnimFrame(animloop, field);
+            if(loop) {
+              requestAnimFrame(game_loop, field);
+            }
+        }
+
+        (function start() {
+          if(!loop) {
+            levelInfoDiv.innerHTML = "Level: "+level;
+            livesDiv.innerHTML = "Lives: " +lives;
+            pointsDiv.innerHTML = "Points: "+points;
+
+            // Enable loop
+            loop = true;
+            // Store start time for FPS display
+            fps_prevTime = new Date().getTime();
+            fps_frameCount = 0;
+
+            game_loop();
+          }
         })();
 
-    })();
+        function restart(nextLevel) {
+          // Reset blocks, so they are visible again
+          for(var i=0; i<blocks.length; i++) {
+            blocks[i].show();
+          }
+
+          console.log(1);
+
+          // Hide dialog
+          $(dialogDiv).hide();
+
+          // Start game again at given level (if any) and keep points and lives
+          initGame(nextLevel || 1, nextLevel? points : 0, nextLevel? lives : 3);
+        }
+
+        function nextLevel() {
+          restart(level+1);
+        }
+
+        // Export
+        window.restart = function () { loop=false; window.setTimeout(restart, 300); };
+        window.nextLevel = function () { loop=false; window.setTimeout(nextLevel, 300); };
+
+    })(1, 0, 3); // Start game from level 1, with 0 points and 3 lives, see also restart()

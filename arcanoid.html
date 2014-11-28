@@ -10,7 +10,8 @@
 
 <body>
 
-    <div id="field">
+    <div id="fieldDiv" class="field">
+    <div id="level1" class="level">
         <div class="a2x block"></div>
         <div class="block"></div>
         <div class="block"></div>
@@ -111,19 +112,100 @@
         <div class="block"></div>
         <div class="block"></div>
         <div class="block" style="width: 80px;"></div>
+    </div>
+    <div id="level2" class="level">
+        <div class="a2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x blue block"></div>
+        <div class="a2x blue block"></div>
+        <div class="w2x green block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="a4x block"></div>
+        <div class="a4x red block"></div>
+        <div class="a4x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x spacer"></div>
+        <div class="block" style="clear:both"></div>
+        <div class="a2x yellow block">A</div>
+        <div class="block">B</div>
+        <div class="block">C</div>
+        <div class="a2x spacer">D</div>
+        <div class="block">E</div>
+        <div class="block">F</div>
+        <div class="a2x spacer"></div>
+        <div class="block"></div>
+        <div class="a2x block"></div>
+        <div class="w2x block"></div>
+        <div class="block"></div>
+        <div class="h2x block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="a2x yellow block with platformWidthBonus">Width</div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block" style="width: 80px;"></div>
+    </div>
 
-        <div id="ball"></div>
-        <div id="platform"></div>
-        <div id="TextInfo_lives">Lives: 3</div>
-        <div id="TextInfo_Points">Points: 0</div>
-        <div id="display">
-            <div id="key" onclick='parent.location="javascript:location.reload()"'>Restart</div>
-            <div id="key" style="left:248px" onclick="">Next Level</div>
+        <div id="ballDiv" class="ball"></div>
+        <div id="platformDiv" class="platform"></div>
+        <div class="information">
+          <div id="levelInfoDiv">Level: 0</div>
+          <div id="livesDiv">Lives: 0</div>
+          <div id="pointsDiv">Points: 0</div>
+          <div id="frameRateDiv">FPS: 0</div>
+        </div>
+        <div id="dialogDiv" class="dialog">
+            <div id="displayDiv">You LOST</div>
+            <div id="restartDiv" class="link" onclick='restart()'>Restart</div>
+            <div id="nextLevelDiv" class="link" onclick="nextLevel()">Next Level</div>
         </div>
     </div>
 
 
 </body>
     <script src="game.js"></script>
-
 </html>
