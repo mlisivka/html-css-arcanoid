@@ -12,5 +12,5 @@ See it in action: https://rawgit.com/vlisivka/html-css-arcanoid/master/arcanoid.
 Authors:
 --------
 
-  * Mykola S. Lisivka
+  * Mykola S. Lisivka <mykola.lisivka@gmail.com>
   * Volodymyr M. Lisivka <vlisivka@gmail.com>

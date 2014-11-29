@@ -228,8 +228,8 @@
             var time = new Date().getTime();
             var delta = time - prevTime;
             prevTime = time;
-            if(delta > 1000/frameRate) {
-              delta = 1000/frameRate;
+            if(delta > 2*1000/frameRate) {
+              delta = 2*1000/frameRate;
             }
 
             if(!launched) {
